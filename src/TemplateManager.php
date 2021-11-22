@@ -45,6 +45,7 @@ class TemplateManager
     // Register functions.
     private function register(string $placeholder, callable $fn, bool $defaultEmptyString = false)
 	{
+        $this->checkReflectedFuntionsParams($fn);
         $this->placeholders[$placeholder] = [
             'placeholder' => $placeholder,
             'defaultBlank' => $defaultEmptyString,
@@ -97,6 +98,14 @@ class TemplateManager
         return $replaced;
     }
 
+    private function checkReflectedFuntionsParams(callable $fn)
+	{
+        $reflectedFn = new \ReflectionFunction($fn);
+        if (! $reflectedFn) {
+            throw new \Exception("The function is not implemented");
+        }
+	}
+
     private function computeText($text, array $data)
     {
         // Refactor here, call private functions to do the job...
@@ -109,9 +118,8 @@ class TemplateManager
 
         /*
         $data = $this->checkParameters($text, $data);
-        //$interpellations = $this->matchInterpelations($text, $data);
-        $interpellations = $this->matchInterpelations('quote:destination_link', $data);
-        dump($interpellations);
+        $interpellations = $this->matchInterpelations($text, $data);
+        //$interpellations = $this->matchInterpelations("bbabbaa [NOT:FOUND] kkkk", $data);
 
         return strtr($text, $interpellations);
 
