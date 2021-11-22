@@ -7,14 +7,38 @@ class TemplateManager
 
     // To set a defualt value if the replacement text does NOT exixts (default empty strings).
     private $emptyPlaceholdersDefaultTexts = [
+        'quote:destination_link' => '',
+        'user:first_name' => '',
         'ALL' => '',
     ];
 
     public function __construct()
     {
-        // Return placeholders
+        // Register placeholders.
         $this->register('quote:destination_name', function (Quote $quote) {
-            return DestinationRepository::getInstance()->getById($quote->destinationId);
+            $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
+            return $destination->countryName;
+        });
+        $this->register('quote:destination_link', function (Quote $quote) {
+            $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
+            $site = SiteRepository::getInstance()->getById($quote->siteId);
+            return ($destination)
+                ? $site->url . '/' . $destination->countryName . '/quote/' . $quote->id
+                : $this->emptyPlaceholdersDefaultTexts['quote:destination_link']
+            ;
+        });
+        $this->register('quote:summary_html', function (Quote $quote) {
+            return Quote::renderHtml($quote);
+        });
+        $this->register('quote:summary', function (Quote $quote) {
+            return Quote::renderText($quote);
+        });
+        $this->register('user:first_name', function (User $user) {
+            $user = ApplicationContext::getInstance()->getCurrentUser();
+            return ($user)
+                ? $user->firstname
+                : $this->emptyPlaceholdersDefaultTexts['user:first_name']
+            ;
         });
     }
 
@@ -53,7 +77,11 @@ class TemplateManager
     // Reflect
     private function interpelate($placeholder, $value)
 	{
-        return (string) call_user_func($this->placeholders[$placeholder]['func'], $value);
+        if (array_key_exists($placeholder, $this->placeholders)) {
+            return (string) call_user_func($this->placeholders[$placeholder]['func'], $value);
+        } else {
+            return $value;
+        }
 	}
 
     public function getTemplateComputed(Template $tpl, array $data)
@@ -81,7 +109,9 @@ class TemplateManager
 
         /*
         $data = $this->checkParameters($text, $data);
-        $interpellations = $this->matchInterpelations($text, $data);
+        //$interpellations = $this->matchInterpelations($text, $data);
+        $interpellations = $this->matchInterpelations('quote:destination_link', $data);
+        dump($interpellations);
 
         return strtr($text, $interpellations);
 
