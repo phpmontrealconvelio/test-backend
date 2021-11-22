@@ -14,4 +14,4 @@ Pour répondre SHORT & SWEET aux besins du test, deux pistes sont identifiées :
 -> la piste retenue est la Num 2 : réduire l'impact sur les autres classes (régressions) et satisfaire plus rapidement les besoins d'affaire.
 
 # Description de la solution
-
+Utiliser les interpelations pour retourner les placeholders, faire un preg_match_all sur la template pour interpeler les fonctions.

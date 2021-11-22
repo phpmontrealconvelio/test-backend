@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Replace the placeholders in a template by given infos.
+ */
 class TemplateManager
 {
     // Placeholders.
@@ -62,68 +64,18 @@ class TemplateManager
         ];
 	}
 
-    // Match
-    private function matchInterpelations(string $text, array $parameters)
-	{
-        preg_match_all('/\[(?<placeholder>(?<var>\w+)(:.+?)?)\]/', $text, $matches, PREG_SET_ORDER);
-        $replacements = [];
-        foreach ($matches as $match) {
-            $default = $match[0];
-            $value = $parameters[$match['var']];
-            $replacements[$default] = $this->interpelate($match['placeholder'], $value);
-        }
-        return $replacements;
-	}
-
-    // Reflect
-    private function interpelate($placeholder, $value)
-	{
-        if (array_key_exists($placeholder, $this->placeholders)) {
-            return (string) call_user_func($this->placeholders[$placeholder]['func'], $value);
-        } else {
-            return $value;
-        }
-	}
-
+    // Main function.
     public function getTemplateComputed(Template $tpl, array $data)
-    {
-        if (!$tpl) {
-            throw new \RuntimeException('no tpl given');
-        }
+	{
+        $replaced = clone ($tpl);
 
-        $replaced = clone($tpl);
-        $replaced->subject = $this->computeText($replaced->subject, $data);
         $replaced->content = $this->computeText($replaced->content, $data);
+        $replaced->subject = $this->computeText($replaced->subject, $data);
 
         return $replaced;
-    }
-
-    private function checkReflectedFuntionsParams(callable $fn)
-	{
-        $reflectedFn = new \ReflectionFunction($fn);
-        if (! $reflectedFn) {
-            throw new \Exception("The function is not implemented");
-        }
-        if ($reflectedFn->getNumberOfParameters() != 1) {
-            throw new \Exception("Expected at least 1 argument");
-        }
-        $reflectedParams = $reflectedFn->getParameters();
-        if ($reflectedParams[0]->getType()->allowsNull() === true) {
-            throw new \Exception("Null value is not allowed");
-        }
-        if ($reflectedParams[0]->isOptional() === true) {
-            throw new \Exception("Argument 1 Cannot be optional");
-        }
 	}
 
-    private function computeText($text, array $data)
-	{
-        $data = $this->checkParameters($text, $data);
-        $interpellations = $this->matchInterpelations($text, $data);
-
-        return strtr($text, $interpellations);
-	}
-
+    // Check parameters passed to main function.
     private function checkParameters(string $text, array $parameters): array
 	{
         preg_match_all('/\[(?<vars>\w+)(:.+?)?\]/', $text, $matches);
@@ -148,4 +100,54 @@ class TemplateManager
         return $parameters;
 	}
 
+    // Replace text placeholders with the data values | default values.
+    private function computeText($text, array $data)
+	{
+        $data = $this->checkParameters($text, $data);
+        $interpellations = $this->matchInterpelations($text, $data);
+
+        return strtr($text, $interpellations);
+	}
+
+    // Match and interpelate.
+    private function matchInterpelations(string $text, array $parameters)
+	{
+        preg_match_all('/\[(?<placeholder>(?<var>\w+)(:.+?)?)\]/', $text, $matches, PREG_SET_ORDER);
+        $replacements = [];
+        foreach ($matches as $match) {
+            $default = $match[0];
+            $value = $parameters[$match['var']];
+            $replacements[$default] = $this->interpelate($match['placeholder'], $value);
+        }
+        return $replacements;
+	}
+
+    // Call reflected functions.
+    private function interpelate($placeholder, $value)
+	{
+        if (array_key_exists($placeholder, $this->placeholders)) {
+            return (string) call_user_func($this->placeholders[$placeholder]['func'], $value);
+        } else {
+            return $value;
+        }
+	}
+
+    // Validation rules on the reflected functions.
+    private function checkReflectedFuntionsParams(callable $fn)
+	{
+        $reflectedFn = new \ReflectionFunction($fn);
+        if (! $reflectedFn) {
+            throw new \Exception("The function is not implemented");
+        }
+        if ($reflectedFn->getNumberOfParameters() != 1) {
+            throw new \Exception("Expected at least 1 argument");
+        }
+        $reflectedParams = $reflectedFn->getParameters();
+        if ($reflectedParams[0]->getType()->allowsNull() === true) {
+            throw new \Exception("Null value is not allowed");
+        }
+        if ($reflectedParams[0]->isOptional() === true) {
+            throw new \Exception("Argument 1 Cannot be optional");
+        }
+	}
 }
