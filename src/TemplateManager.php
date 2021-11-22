@@ -17,6 +17,14 @@ class TemplateManager
 
     private function computeText($text, array $data)
     {
+        // Refactor here, call private functions to do the job...
+        /*
+        Define placeholders.
+        Use preg_match_all for matching
+        Define interpelation functions
+        Add verifications
+        */
+        
         $APPLICATION_CONTEXT = ApplicationContext::getInstance();
 
         $quote = (isset($data['quote']) and $data['quote'] instanceof Quote) ? $data['quote'] : null;
