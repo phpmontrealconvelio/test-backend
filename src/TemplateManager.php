@@ -104,6 +104,16 @@ class TemplateManager
         if (! $reflectedFn) {
             throw new \Exception("The function is not implemented");
         }
+        if ($reflectedFn->getNumberOfParameters() != 1) {
+            throw new \Exception("Expected at least 1 argument");
+        }
+        $reflectedParams = $reflectedFn->getParameters();
+        if ($reflectedParams[0]->getType()->allowsNull() === true) {
+            throw new \Exception("Null value is not allowed");
+        }
+        if ($reflectedParams[0]->isOptional() === true) {
+            throw new \Exception("Argument 1 Cannot be optional");
+        }
 	}
 
     private function computeText($text, array $data)
@@ -118,8 +128,9 @@ class TemplateManager
 
         /*
         $data = $this->checkParameters($text, $data);
-        $interpellations = $this->matchInterpelations($text, $data);
-        //$interpellations = $this->matchInterpelations("bbabbaa [NOT:FOUND] kkkk", $data);
+        //$interpellations = $this->matchInterpelations($text, $data);
+
+        $interpellations = $this->matchInterpelations("bbabbaa [quote:summary_html] kkkk", $data);
 
         return strtr($text, $interpellations);
 
