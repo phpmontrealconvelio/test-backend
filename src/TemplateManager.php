@@ -5,14 +5,14 @@
 class TemplateManager
 {
     // Placeholders.
-    private $placeholders = [];
+    private $placeholders = array();
 
     // To set a defualt value if the replacement text does NOT exixts (default empty strings).
-    private $emptyPlaceholdersDefaultTexts = [
+    private $emptyPlaceholdersDefaultTexts = array(
         'quote:destination_link' => '',
         'user:first_name' => '',
         'ALL' => '',
-    ];
+    );
 
     public function __construct()
     {
